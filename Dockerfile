@@ -20,9 +20,9 @@ RUN groupadd --gid 1000 appuser && \
 # Set work directory
 WORKDIR /app
 
-# Copy requirements and install dependencies as root
+# Install production dependencies
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt gunicorn
 
 # Change ownership of app directory
 RUN chown -R appuser:appuser /app
@@ -43,5 +43,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
     CMD python manage.py check || exit 1
 
-# Default command
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# Default command - use Gunicorn for production
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "3", "nbfc_django.wsgi:application"]
